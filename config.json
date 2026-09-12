@@ -1,0 +1,12 @@
+{
+  "first_year": 1980,
+  "base_end": 1999,
+  "patch_end": 2014,
+  "val_end": 2018,
+  "test_end": 2024,
+  "leads": [24, 48, 72, 96, 120],
+  "enso_lag_months": 2,
+  "seed": 42,
+  "bootstrap": 1000,
+  "tree_iterations": 150
+}

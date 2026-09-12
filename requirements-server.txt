@@ -1,0 +1,10 @@
+# Install the appropriate CUDA build of torch separately, before this file.
+# 2.0.1 is the Python package release, NOT the Aurora checkpoint/model version.
+torch==2.8.0
+microsoft-aurora==2.0.1
+numpy>=1.26,<3
+pandas>=2.2,<3
+xarray>=2025.1,<2027
+netCDF4>=1.7,<2
+cdsapi>=0.7,<1
+huggingface-hub>=0.28,<2

@@ -1,0 +1,13 @@
+{
+  "first_year": 1980,
+  "base_end": 2015,
+  "patch_end": 2020,
+  "val_end": 2022,
+  "test_end": 2025,
+  "leads": [24, 48, 72, 96, 120],
+  "enso_lag_months": 2,
+  "seed": 42,
+  "bootstrap": 1000,
+  "tree_iterations": 150,
+  "protocol": "retrospective_correction_pilot_backbone_overlap_NOT_CLEARED"
+}

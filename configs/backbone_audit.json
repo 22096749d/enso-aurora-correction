@@ -1,0 +1,9 @@
+{
+  "model": "Aurora 0.25 Pretrained",
+  "checkpoint": "aurora-0.25-pretrained.ckpt",
+  "input_source": "ERA5",
+  "training_and_model_selection_latest_date": null,
+  "evidence_url_and_section": null,
+  "verified_against_downloaded_checkpoint_revision": false,
+  "note": "Pilot execution is allowed, but out-of-backbone-sample forecast claims are NOT established. Inspect the exact checkpoint's pretraining and selection data before defining a publication holdout."
+}
