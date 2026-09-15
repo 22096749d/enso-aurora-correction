@@ -255,24 +255,42 @@ def base(run,cfg):
 def external(run,path,model_id):
     fresh(run/'forecasts.csv')
     d=frame(run,'samples.csv')
-    f=pd.read_csv(path)
+    f=pd.read_csv(path,dtype={'sid':str,'model_id':str})
     required=KEY+['model_id','base_lat','base_lon']
     if not set(required).issubset(f): raise ValueError(f'External CSV needs {required}')
+    f['sid']=f.sid.str.strip();d['sid']=d.sid.astype(str).str.strip()
+    f['model_id']=f.model_id.str.strip()
     f=f[f.model_id==model_id].copy()
-    if f.empty or f.duplicated(KEY).any(): raise ValueError('Empty model subset or duplicate forecast keys.')
-    f['init_time']=pd.to_datetime(f.init_time,utc=True).dt.tz_localize(None).astype(str)
-    d['init_time']=pd.to_datetime(d.init_time).astype(str)
+    # Never merge timestamps through dtype-dependent string formatting.  Pandas
+    # may render an all-midnight Series as YYYY-MM-DD while another Series uses
+    # YYYY-MM-DD HH:MM:SS although they identify the same UTC instant.
+    f_time=pd.to_datetime(f.init_time,utc=True,errors='coerce')
+    d_time=pd.to_datetime(d.init_time,utc=True,errors='coerce')
+    if f_time.isna().any() or d_time.isna().any():raise ValueError('Unparseable initialization time.')
+    f['_init_ns']=f_time.astype('int64');d['_init_ns']=d_time.astype('int64')
+    f['lead_h']=pd.to_numeric(f.lead_h,errors='coerce')
+    d['lead_h']=pd.to_numeric(d.lead_h,errors='coerce')
+    if f.lead_h.isna().any() or d.lead_h.isna().any():raise ValueError('Non-numeric lead_h.')
+    f['lead_h']=f.lead_h.astype('int64');d['lead_h']=d.lead_h.astype('int64')
+    merge_key=['sid','_init_ns','lead_h']
+    if f.empty or f.duplicated(merge_key).any(): raise ValueError('Empty model subset or duplicate normalized forecast keys.')
     if not (f.base_lat.between(-90,90).all() and f.base_lon.between(-180,360).all()):
         raise ValueError('Invalid forecast coordinates.')
     f['base_lon']=(f.base_lon+180)%360-180
-    joined=d.merge(f[required],on=KEY,how='inner',validate='one_to_one')
-    if joined.empty: raise ValueError('No matching SID/init_time/lead_h.')
+    right=['sid','_init_ns','lead_h','model_id','base_lat','base_lon']
+    joined=d.merge(f[right],on=merge_key,how='inner',validate='one_to_one')
+    if joined.empty:
+        sid_overlap=len(set(d.sid)&set(f.sid))
+        pair_overlap=len(set(zip(d.sid,d._init_ns))&set(zip(f.sid,f._init_ns)))
+        key_overlap=len(set(zip(d.sid,d._init_ns,d.lead_h))&set(zip(f.sid,f._init_ns,f.lead_h)))
+        raise ValueError(f'No matching normalized keys: SID={sid_overlap}, SID+time={pair_overlap}, full={key_overlap}.')
     audit=d.groupby(['split','lead_h']).size().rename('eligible').to_frame()
     audit['matched']=joined.groupby(['split','lead_h']).size()
     audit['matched']=audit.matched.fillna(0).astype(int)
     audit['coverage']=audit.matched/audit.eligible
     audit.to_csv(run/'external_coverage.csv')
     joined[['base_x','base_y']]=xy(joined.lat0.to_numpy(),joined.lon0.to_numpy(),joined.base_lat.to_numpy(),joined.base_lon.to_numpy())
+    joined=joined.drop(columns=['_init_ns'])
     joined.to_csv(run/'forecasts.csv',index=False)
     save_json(run/'external_manifest.json',{'source':str(path),'sha256':sha(path),'model_id':model_id,
         'warning':'User must document backbone training dates, forecast initialization and tracker failures.'})

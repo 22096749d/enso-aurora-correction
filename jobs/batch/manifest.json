@@ -1,0 +1,8 @@
+{
+  "plan_sha256": "f68c1d718263ea6e14d1b1230121b0494e4d7abfb2078fcd4a05e36ca5cf8a1f",
+  "samples_sha256": "8b4bcb2735fd9506a683c24e359c34d6058a26998f6b967f237b0fc8e82cd64c",
+  "scope": "engineering_pilot",
+  "max_cases_per_split": 100,
+  "model_id": "aurora025_pretrained_era5_officialtracker",
+  "note": "No future target coordinates or ENSO features transferred to the server."
+}
